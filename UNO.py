@@ -20,7 +20,7 @@ class Uno():
             except ValueError:
                 print('La cantidad de jugadores no es válida. Ingresar nuevamente otra cantidad')
     
-    def __agregarJugadores(self) -> None:
+    def __agregarJugador(self) -> None:
         '''Agrega un nombre de jugador en mayuscula y su posicion, si el nombre del jugador no es valido o el nombre ya se encuentra repetido entre los jugadores vuelve a preguntar el nombre y vacia la lista de jugadores'''
         
         for posicion in range(self.__cantidadJugadores):
@@ -29,7 +29,7 @@ class Uno():
                 jugador.getNombre() == nombreJugador for jugador in self.__losJugadores):
                 print('El nombre no es valido ingresar nuevamente todos los nombres')
                 self.__losJugadores.clear()
-                self.__agregarJugadores()
+                self.__agregarJugador()
             else:
                 self.__losJugadores.append(Jugador(nombreJugador))
     
@@ -74,7 +74,7 @@ class Uno():
         pass
 
     def jugar(self):
-        self.__agregarJugadores()
+        self.__agregarJugador()
         self.__quienMezcla()
         self.__sumarRonda()
         self.__sumarRonda()
