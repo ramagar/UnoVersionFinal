@@ -1,6 +1,4 @@
-from abc import abstractmethod
 from random import randint
-from Jugador import Jugador
 
 class Ronda():
     def __init__(self, numeroRonda:int=1) -> None:
@@ -25,29 +23,6 @@ class Ronda():
         if randint(1, 4) == 1:
             return True
         return False
-    
-    @abstractmethod
-    def sumarPuntos(self, jugador:Jugador) -> None:
-        '''Metodo abstracto para sumar puntos en los jugadores'''
-        pass
-    
-class RondaNormal(Ronda):
-    def __init__(self) -> None:
-        '''Ronda Normal'''
-        super().__init__()
-        
-    def sumarPuntos(self, puntos:float|int, isGanador:bool=False) -> int|float:
-        '''Metodo logico para sumar puntos en los jugadores durante la ronda normal'''
-        return puntos*2
-    
-class RondaEspecial(Ronda):
-    def __init__(self) -> None:
-        '''Ronda Escpecial'''
-        super().__init__()
-
-    def sumarPuntos(self, puntos:float|int, isGanador:bool=False) -> int|float:
-        '''Metodo logico para sumar puntos en los jugadores durante la ronda especial'''
-        return puntos*10
     
     
 

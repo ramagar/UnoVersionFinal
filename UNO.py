@@ -1,4 +1,4 @@
-from Ronda import Ronda, RondaNormal, RondaEspecial
+from Ronda import Ronda
 from Jugador import Jugador
 from random import choice
 
@@ -7,7 +7,8 @@ class Uno():
         '''Constructor de la clase'''
         self.__cantidadJugadores:int = self.__definirCantidadJugadores()
         self.__losJugadores:list[Jugador] = []
-        self.__puntajeJugadorRonda:list[Jugador] = []
+        self.__ganadorRonda:str = ''
+        self.__puntajeJugadoresRonda:list[float|int] = []
         self.__laRonda:Ronda = Ronda()
         self.__jugadorMezcla:str = ''
         
@@ -60,56 +61,71 @@ class Uno():
         numeroRonda = self.__laRonda.getNumeroRonda()
         return self.__laRonda.setNumeroRonda(numeroRonda + 1)
     
-    def __ganadorMano(self) -> Jugador:
-        '''Metodo que pide por input quien fue el ganador de la mano'''
+    def __ganadorMano(self) -> None:
+        '''Metodo que pide por input quien fue el ganador de la mano y lo guarda como ganador ronda'''
         while True:
             ganador = input('Ingresar quien gano la mano: ').upper()
             for jugador in self.__losJugadores:
-                nombreJugador = jugador.getNombre()
-                if ganador == nombreJugador.upper():
-                    return jugador
+                if ganador == jugador.getNombre().upper():
+                    self.__ganadorRonda = ganador
+                    return None
                 elif ganador in ['CORRECCION', 'CORREGIR', 'ATRAS', 'RECUPERAR']:
                     self.__correccion()
-                    break
+                    return None
             print('El jugador proporcionado no se encuentra entre los jugadores')
 
     def __setPuntosRonda(self) -> None:
         '''Setea los puntos que hizo cada jugador en la ronda'''
-        puntajeJugadorRonda:list[Jugador] = self.__losJugadores.copy()
-        i = 0
-        while i < self.__cantidadJugadores:
-            try:
-                for jugador in puntajeJugadorRonda:
-                    nombreJugador = jugador.getNombre()
-                    puntosJugador = int(input(f'Escribir los puntos que hizo {nombreJugador}: '))
-                    jugador.setPuntos(nombreJugador, puntosJugador)
-                    i += 1
-            except ValueError:
-                puntajeJugadorRonda:list[Jugador] = self.__losJugadores.copy()
-                i = 0
-                print('El valor ingresado no es valido, ingresar nuevamente')
-        self.__puntajeJugadorRonda = puntajeJugadorRonda
+        self.__puntajeJugadoresRonda.clear()
+        while True:
+            i = 0
+            while i < len(self.__losJugadores):
+                for jugador in self.__losJugadores:
+                    try:
+                        if jugador.getNombre() != self.__ganadorRonda:
+                            self.__puntajeJugadoresRonda.append(int(input(f'Escribir cuantos puntos hizo {jugador.getNombre()}: ')))
+                        else:
+                            self.__puntajeJugadoresRonda.append(0)
+                        i += 1
+                    except ValueError:
+                        self.__puntajeJugadoresRonda.clear()
+                        print('El valor no es valido, volver a escribir los puntajes')
+                        break
+            break
     
     def __sumarPuntos(self) -> None:
         '''Suma los puntos para cada jugador tomando al ganador de la mano y si es ronda especial o normal'''
-        ganador = self.__ganadorMano()
         if self.__laRonda.isRondaEspecial():
-            for jugador in self.__puntajeJugadorRonda:
-                if jugador == ganador:
-                    ganador.setPuntosRondaAnterior(ganador.getNombre(), ganador.getPuntos())
-                    ganador.setPuntos(ganador.getNombre(), RondaEspecial().sumarPuntos(ganador.getPuntos(), True))
+            for posicion, jugador in enumerate(self.__losJugadores):
+                if jugador.getNombre() == self.__ganadorRonda:
+                    jugador.setPuntosRondaAnterior(jugador.getNombre(), jugador.getPuntos())
+                    jugador.setPuntos(jugador.getNombre(), self.__sumarPuntosRondaEspecial(self.__puntajeJugadoresRonda, posicion, True))
                 else:
                     jugador.setPuntosRondaAnterior(jugador.getNombre(), jugador.getPuntos())
-                    jugador.setPuntos(jugador.getNombre(), RondaEspecial().sumarPuntos(jugador.getPuntos()))
+                    jugador.setPuntos(jugador.getNombre(), self.__sumarPuntosRondaEspecial(self.__puntajeJugadoresRonda, posicion))
         else:
-            for jugador in self.__losJugadores:
-                if jugador == ganador:
-                    ganador.setPuntosRondaAnterior(ganador.getNombre(), ganador.getPuntos())
-                    ganador.setPuntos(ganador.getNombre(), RondaNormal().sumarPuntos(ganador.getPuntos(), True))
+            for posicion, jugador in enumerate(self.__losJugadores):
+                if jugador.getNombre() == self.__ganadorRonda:
+                    jugador.setPuntosRondaAnterior(jugador.getNombre(), jugador.getPuntos())
+                    jugador.setPuntos(jugador.getNombre(), self.__sumarPuntosRondaNormal(self.__puntajeJugadoresRonda, posicion,  True))
                 else:
                     jugador.setPuntosRondaAnterior(jugador.getNombre(), jugador.getPuntos())
-                    jugador.setPuntos(jugador.getNombre(), RondaNormal().sumarPuntos(jugador.getPuntos()))
-         
+                    jugador.setPuntos(jugador.getNombre(), self.__sumarPuntosRondaNormal(self.__puntajeJugadoresRonda, posicion))
+    
+    def __sumarPuntosRondaNormal(self, listaPuntos:list[float|int], posicion:int, isGanador:bool=False) -> int|float:
+        '''Metodo logico para sumar puntos en los jugadores durante la ronda normal'''
+        if isGanador:
+            return self.__losJugadores[posicion].getPuntos() + sum([puntos for puntos in listaPuntos])
+        else:
+            return self.__losJugadores[posicion].getPuntos() - listaPuntos[posicion]/2
+        
+    def __sumarPuntosRondaEspecial(self, listaPuntos:list[float|int], posicion:int, isGanador:bool=False) -> int|float:
+        '''Metodo logico para sumar puntos en los jugadores durante la ronda especial'''
+        if isGanador:
+            return self.__losJugadores[posicion].getPuntos() + sum([puntos for puntos in listaPuntos]) * 1.2
+        else:
+            return self.__losJugadores[posicion].getPuntos() - listaPuntos[posicion]
+    
     
     def __correccion(self) -> None:
         '''Metodo que permite recuperar el puntaje anterior en caso de algun error de tipeo en la sumatoria de puntajes'''
@@ -130,12 +146,13 @@ class Uno():
     def jugar(self):
         self.__agregarJugador()
         for i in range(3):
+            self.__ganadorMano()
             self.__setPuntosRonda()
-            self.__sumarPuntos
-            for jugador in self.__puntajeJugadorRonda:
-                print(f'{jugador.getNombre()} : {jugador.getPuntos()}')
+            self.__sumarPuntos()
+            for puntaje in self.__puntajeJugadoresRonda:
+                print(puntaje)
             for jugador in self.__losJugadores:
-                print(f'{jugador.getNombre()} : {jugador.getPuntos()}')
+                print(f'{jugador.getNombre()} : {jugador.getPuntosRondaAnterior()} | {jugador.getPuntos()}')
 
         
         
