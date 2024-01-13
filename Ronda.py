@@ -1,14 +1,22 @@
 from random import randint
 
 class Ronda():
+    '''
+    Clase que permite generar una Ronda
+    
+    Atributos:
+    - __numeroRonda (int): Numero de la ronda acutal
+    - __rondaEspecial (bool): Booleano que cuando es ronda especial se le asigna True, de lo contrario False
+    '''
     def __init__(self, numeroRonda:int=1) -> None:
         '''
-        Constructor de la clase abstracta Ronda
+        Constructor de la clase Ronda
         
-        Args:
+        Parametros:
         - numeroRonda (int): numero de la ronda. Default = 0
         '''
         self.__numeroRonda:int = numeroRonda
+        self.__rondaEspecial:bool = bool()
         
     def setNumeroRonda(self, numeroRonda:int=1) -> None:
         '''Metodo que setea el numero de la ronda'''
@@ -18,14 +26,13 @@ class Ronda():
         '''Metodo que devuelve el numero de la ronda'''
         return self.__numeroRonda
     
-    def isRondaEspecial(self) -> bool:
-        '''Devuelve True si es ronda especial (25%) y False si es ronda normal (75%)'''
+    def setRondaEspecial(self) -> None:
+        '''Metodo que define True si es ronda especial (25%) y False si es ronda normal (75%)'''
         if randint(1, 4) == 1:
-            return True
-        return False
-    
-    
-
-    
-    
-    
+            self.__rondaEspecial = True
+        else:
+            self.__rondaEspecial = False
+        
+    def getRondaEspecial(self) -> bool:
+        '''Metodo que devuelve True si es ronda especial, de lo contrario devuelve False'''
+        return self.__rondaEspecial

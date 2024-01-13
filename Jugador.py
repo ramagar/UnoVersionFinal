@@ -1,11 +1,18 @@
 class Jugador():
+    '''
+    Clase que permite generar un Jugador con su nombre y puntaje
+    
+    Atributos:
+    - __jugador (dict): Un diccionario que almacena el nombre del jugador y sus puntos.
+    - __jugadorRondaAnterior (dict): Un diccionario que almacena el nombre del jugador y sus puntos en la ronda anterior.
+    '''
     def __init__(self, nombre:str, puntos:int|float=0) -> None:
         '''
         Contructor de la clase Jugador
         
-        Args:
-        - nombre (str): el nombre del jugador
-        - puntos (float): los puntos del jugador. Default = 0
+        Parametros:
+        - nombre (str): El nombre del jugador
+        - puntos (int|float): Los puntos del jugador. Default = 0
         '''
         self.__jugador:dict = {nombre:puntos}
         self.__jugadorRondaAnterior:dict = {nombre:puntos}
