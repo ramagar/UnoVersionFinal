@@ -8,6 +8,7 @@ class Ronda():
     - __numeroRonda (int): Numero de la ronda acutal
     - __rondaEspecial (bool): Booleano que cuando es ronda especial se le asigna True, de lo contrario False
     '''
+    
     def __init__(self, numeroRonda:int=1) -> None:
         '''
         Constructor de la clase Ronda
@@ -15,8 +16,11 @@ class Ronda():
         Parametros:
         - numeroRonda (int): numero de la ronda. Default = 0
         '''
+        
         self.__numeroRonda:int = numeroRonda
+        '''Numero de la ronda acutal'''
         self.__rondaEspecial:bool = bool()
+        '''Booleano que cuando es ronda especial se le asigna True, de lo contrario False'''
         
     def setNumeroRonda(self, numeroRonda:int=1) -> None:
         '''Metodo que setea el numero de la ronda'''

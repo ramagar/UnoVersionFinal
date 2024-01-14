@@ -1,30 +1,54 @@
 from Ronda import Ronda
 from Jugador import Jugador
-from random import choice
-from os import system
+from random import choice, random
+import matplotlib.pyplot as plt
+from os import system, getcwd, chdir
+import csv
+
+RUTA = getcwd()
 
 class Uno():
     '''
     Clase que genera el juego de Uno
     
     Atributos:
-    - __laApuesta (str): Define que es lo que se apuesta
+    - __laApuesta (str): Que es lo que se apuesta
     - __cantidadJugadores (int): Cantidad de jugadores que juegan
     - __losJugadores (list[Jugador]): Lista de los jugadores, con su nombre y sus puntos
     - __ganadorRonda (str): Nombre del jugador que gano la ronda
     - __puntajesJugadoresRonda (list[int|float]): Lista de puntajes que hizo cada jugador en la ronda
     - __laRonda (Ronda): Ronda actual en la que se esta jugando
     - __jugadorMezcla (str): Nombre del jugador al que le toca mezclar en la ronda acutal
+    - __puntajeMaximo (int): Puntaje maximo en donde si un jugador lo alcanza se termina el juego
+    - __puntajeMinimo (int): Puntaje minimo en donde si un jugador lo alcanza se termina el juego
+    - __elPerdedor (str): Nombre del jugador que perdio el juego
     '''
+    
     def __init__(self) -> None:
         '''Constructor de la clase Uno'''
+        
         self.__laApuesta:str = str()
+        '''Que es lo que se apuesta'''
         self.__cantidadJugadores:int = int()
+        '''Cantidad de jugadores que juegan'''
         self.__losJugadores:list[Jugador] = []
+        '''Lista de los jugadores, con su nombre y sus puntos'''
         self.__ganadorRonda:str = str()
+        '''Nombre del jugador que gano la ronda'''
         self.__puntajesJugadoresRonda:list[float|int] = []
+        '''Lista de puntajes que hizo cada jugador en la ronda'''
         self.__laRonda:Ronda = Ronda()
+        '''Ronda actual en la que se esta jugando'''
         self.__jugadorMezcla:str = str()
+        '''Nombre del jugador al que le toca mezclar en la ronda acutal'''
+        self.__puntajeMaximo:int = int()
+        '''Puntaje maximo en donde si un jugador lo alcanza se termina el juego'''
+        self.__puntajeMinimo:int = int()
+        '''Puntaje minimo en donde si un jugador lo alcanza se termina el juego'''
+        self.__coloresJugadores:list[float] = []
+        '''Lista de colores asignados a cada jugador'''
+        self.__elPerdedor:str = str()
+        '''Nombre del jugador que perdio el juego'''
     
     def __setApuesta(self) -> None:
         '''Metodo que define la apuesta por la que se juega'''
@@ -49,8 +73,13 @@ class Uno():
                 system('cls')
                 print('La cantidad de jugadores no es válida. Ingresar nuevamente otra cantidad\n\n')
     
+    def __setPuntajeMaximoMinimo(self) -> None:
+        '''Metodo que define el puntaje maximo y minimo al que puede llegar un jugador para que termine el juego'''
+        self.__puntajeMaximo = self.__cantidadJugadores * 100
+        self.__puntajeMinimo = self.__cantidadJugadores * (-75)
+    
     def __agregarJugador(self) -> None:
-        '''Agrega un nombre de jugador en mayuscula. Si el nombre del jugador no es valido o el nombre ya se encuentra repetido entre los jugadores, vacia la lista de jugadores y vuelve a preguntar los nombres de cada uno de los jugadores'''
+        '''Metodo que agrega un nombre de jugador en mayuscula. Si el nombre del jugador no es valido o el nombre ya se encuentra repetido entre los jugadores, vuelve a preguntar los nombres de cada uno de los jugadores'''
         while True:
             i = 0
             while i < self.__cantidadJugadores:
@@ -133,7 +162,7 @@ class Uno():
             break        
     
     def __setPuntos(self) -> None:
-        '''Metodo que define los puntos para cada jugador tomando al ganador de la mano y los puntos de la ronda anterior de cada jugador'''
+        '''Metodo que define los puntos actuales y los puntos de la ronda anterior para cada jugador'''
         if self.__laRonda.getRondaEspecial():
             for posicion, jugador in enumerate(self.__losJugadores):
                 if jugador.getNombre() == self.__ganadorRonda:
@@ -152,14 +181,14 @@ class Uno():
                     jugador.setPuntos(jugador.getNombre(), round(self.__sumarPuntosRondaNormal(self.__puntajesJugadoresRonda, posicion), 2))
     
     def __sumarPuntosRondaNormal(self, listaPuntos:list[float|int], posicion:int, isGanador:bool=False) -> int|float:
-        '''Metodo logico para sumar puntos en los jugadores durante la ronda normal'''
+        '''Metodo que suma los puntos de los jugadores durante la ronda normal'''
         if isGanador:
             return self.__losJugadores[posicion].getPuntos() + sum([puntos for puntos in listaPuntos])
         else:
             return self.__losJugadores[posicion].getPuntos() - listaPuntos[posicion]/2
         
     def __sumarPuntosRondaEspecial(self, listaPuntos:list[float|int], posicion:int, isGanador:bool=False) -> int|float:
-        '''Metodo logico para sumar puntos en los jugadores durante la ronda especial'''
+        '''Metodo que suma los puntos de los jugadores durante la ronda especial'''
         if isGanador:
             return self.__losJugadores[posicion].getPuntos() + sum([puntos for puntos in listaPuntos]) * 1.2
         else:
@@ -167,24 +196,23 @@ class Uno():
     
     def __correccion(self) -> None:
         '''Metodo que permite recuperar el puntaje anterior en caso de algun error de tipeo en la sumatoria de puntajes'''
-        print('Se activo el modo de correccion')
+        print('\n\nSe activo el modo de correccion\n\n')
         for jugador in self.__losJugadores:
             jugador.setPuntos(jugador.getNombre(), jugador.getPuntosRondaAnterior())
             print(f'{jugador.getNombre()} : {jugador.getPuntos()}')
     
     def __hayPerdedor(self) -> bool:
-        '''Metodo que define el puntaje maximo y minimo en donde el jugador pierde. Si un jugador alcanza alguno de esos puntajes se define un perdedor y se termina el juego'''
-        maximo = self.__cantidadJugadores * 100
-        minimo = self.__cantidadJugadores * (-75)
+        '''Metodo que devuelve True si hay un perdedor y False si no lo hay. El perdedor se define si algun jugador llega al puntaje maximo o al puntaje minimo'''
         for jugador in self.__losJugadores:
-            if jugador.getPuntos() > maximo or jugador.getPuntos() < minimo:
+            if jugador.getPuntos() > self.__puntajeMaximo or jugador.getPuntos() < self.__puntajeMinimo:
                 system('cls')
                 print('Hay un perdedor/a en la sala...', '\n')
                 input('Toca ENTER para ver quien es: ')
                 system('cls')
                 for jugador in self.__losJugadores:
                     if jugador.getPuntos() == min([perdedor.getPuntos() for perdedor in self.__losJugadores]):
-                        print(f'El perdedor/a es {jugador.getNombre()} y tiene que {self.__laApuesta}\n\n\n')
+                        self.__elPerdedor = jugador.getNombre()
+                        print(f'El perdedor/a es {self.__elPerdedor} y tiene que {self.__laApuesta}\n\n\n')
                         return True
         return False
     
@@ -196,15 +224,30 @@ class Uno():
         print('~'*33, '\n\n')
     
     def __mostrarGrafico(self) -> None:
-        pass
+        '''Metodo que muestra el grafico de los puntajes'''
+        if self.__laRonda.getNumeroRonda() == 2:
+            self.__coloresJugadores = [(random(), random(), random()) for _ in range(self.__cantidadJugadores)]
+        fig, ax = plt.subplots(figsize=(8.5, 10))
+        ax.set_ylim(self.__puntajeMinimo, self.__puntajeMaximo)
+        ax.bar([jugador.getNombre() for jugador in self.__losJugadores], [jugador.getPuntos() for jugador in self.__losJugadores], label=[jugador.getNombre() for jugador in self.__losJugadores], color= self.__coloresJugadores)
+        ax.set_ylabel('Puntos')
+        ax.set_title(f'RONDA {self.__laRonda.getNumeroRonda()-1}')
+        ax.legend(title='Jugadores')
+        plt.show(block=False)
     
     def __guardarResultado(self) -> None:
-        input('Toca Enter para terminar el juego: ')
+        '''Metodo que guarda los resultados en un excel dentro de la carpeta de ejecucion'''
+        chdir(RUTA)
+        with open('resultados.csv', 'a', newline='') as archivo:
+            writer = csv.writer(archivo)
+            writer.writerow([f'{self.__elPerdedor} =====> {self.__laApuesta}'])
+        input('Toca Enter para terminar el juego')
 
     def jugar(self):
         '''Metodo para jugar al Uno'''
         self.__setApuesta()
         self.__setCantidadJugadores()
+        self.__setPuntajeMaximoMinimo()
         self.__agregarJugador()
         while not self.__hayPerdedor():
             self.__setQuienMezcla()
@@ -215,7 +258,6 @@ class Uno():
             self.__mostrarResultados()
             self.__mostrarGrafico()
         self.__mostrarResultados()
-        self.__mostrarGrafico()
         self.__guardarResultado()
 
 def main():
